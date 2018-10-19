@@ -1,5 +1,8 @@
 module SimpleSparseArrays
+using Base.Cartesian
+using LinearAlgebra
 
-# package code goes here
+include("core.jl")
+include("testing.jl")
 
-end # module
+end#module
