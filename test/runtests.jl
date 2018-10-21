@@ -3,6 +3,10 @@ using SimpleSparseArrays.Testing
 using LinearAlgebra
 using Test
 
+@testset "basics" begin
+    @test SimpleSparseArray(1,2,3) == SimpleSparseArray{Float64}(1,2,3)
+end
+
 @testset "no redundant zeros" begin
     arr = SimpleSparseArray{Float64}(10,10)
     @test isempty(eachstoredindex(arr))
@@ -12,6 +16,11 @@ using Test
     @test isempty(eachstoredindex(map(+, arr, arr)))
     @test isempty(eachstoredindex(map(+, arr, arr, arr, arr)))
     @test isempty(eachstoredindex(sparsify(zeros(3))))
+
+    @test_broken isempty(eachstoredindex(arr[:,1]))
+    @test_broken isempty(eachstoredindex(arr[1:3, 2:4]))
+    @test_broken isempty(eachstoredindex(sqrt.(arr)))
+    @test_broken isempty(eachstoredindex(sin.(arr) .+ Ref(1) .* arr))
 end
 
 @testset "test against full" begin

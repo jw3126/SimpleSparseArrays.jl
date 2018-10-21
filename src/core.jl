@@ -13,11 +13,14 @@ struct SimpleSparseArray{T,N} <: AbstractArray{T,N}
     size::NTuple{N,Int}
 end
 
-function _SimpleSparseArray(::Type{T}, dims::NTuple{N}) where {T,N}
+function (::Type{SimpleSparseArray})(args...)
+    SimpleSparseArray{Float64}(args...)
+end
+
+function (::Type{SimpleSparseArray{T}})(dims::Vararg{Integer,N}) where {T,N}
     data = Dict{CartesianIndex{N},T}()
     SimpleSparseArray{T,N}(data, dims)
 end
-SimpleSparseArray{T}(dims...) where {T} = _SimpleSparseArray(T, dims)
 
 Base.IndexStyle(::Type{<:SimpleSparseArray}) = IndexCartesian()
 
