@@ -5,6 +5,7 @@ using Test
 
 @testset "basics" begin
     @test SimpleSparseArray(1,2,3) == SimpleSparseArray{Float64}(1,2,3)
+    @test issparse(SimpleSparseArray(1,2,3))
 end
 
 @testset "no redundant zeros" begin
@@ -46,5 +47,7 @@ end
     @test isapprox_full(map, -, vs1, vs2)
     @test isapprox_full(map, sin, vs1)
     @test isapprox_full(map, cos, vs1)
+    @test isapprox_full(broadcast, cos, vs1)
+    @test isapprox_full(broadcast, +, vs1, Ref(1), sparsify(randn(3,1)))
 
 end

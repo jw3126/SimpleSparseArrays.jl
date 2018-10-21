@@ -1,8 +1,10 @@
 export SimpleSparseArray
 export eachstoredindex
 export sparsify
+export issparse
 
 using SparseArrays
+using SparseArrays: issparse
 
 """
     SimpleSparseArray{T,N} <: AbstractArray{T,N}
@@ -10,10 +12,15 @@ using SparseArrays
 `SimpleSparseArray` is a sparse array backed by a `Dict`
 that works in arbitrary dimension.
 """
-struct SimpleSparseArray{Tv,Ti,N} <: AbstractSparseArray{Tv,Ti,N}
+struct SimpleSparseArray{Tv,Ti,N} <: AbstractArray{Tv,N}
+    # in theory this should inherit from AbstractSparseArray{Tv,Ti,N}
+    # in practice this only leads to trouble, for example the show
+    # implementation must be uninherited
     data::Dict{Ti,Tv}
     size::NTuple{N,Int}
 end
+
+SparseArrays.issparse(::SimpleSparseArray) = true
 
 function (::Type{SimpleSparseArray})(args...)
     SimpleSparseArray{Float64}(args...)
@@ -30,12 +37,12 @@ function (::Type{SimpleSparseArray{Tv,Ti}})(dims::Vararg{Integer,N}) where {Tv,T
     SimpleSparseArray{Tv,Ti,N}(data, dims)
 end
 
-function SparseArrays.nonzeroinds(arr::SimpleSparseArray)
-    eachstoredindex(arr)
-end
-function SparseArrays.nonzeros(arr::SimpleSparseArray)
-    values(arr.data)
-end
+# function SparseArrays.nonzeroinds(arr::SimpleSparseArray)
+#     eachstoredindex(arr)
+# end
+# function SparseArrays.nonzeros(arr::SimpleSparseArray)
+#     values(arr.data)
+# end
 
 Base.size(arr::SimpleSparseArray) = arr.size
 function Base.getindex(arr::SimpleSparseArray, i::Integer)
