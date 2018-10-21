@@ -2,14 +2,16 @@ export SimpleSparseArray
 export eachstoredindex
 export sparsify
 
+using SparseArrays
+
 """
     SimpleSparseArray{T,N} <: AbstractArray{T,N}
 
 `SimpleSparseArray` is a sparse array backed by a `Dict`
 that works in arbitrary dimension.
 """
-struct SimpleSparseArray{T,N} <: AbstractArray{T,N}
-    data::Dict{CartesianIndex{N},T}
+struct SimpleSparseArray{Tv,Ti,N} <: AbstractSparseArray{Tv,Ti,N}
+    data::Dict{Ti,Tv}
     size::NTuple{N,Int}
 end
 
@@ -17,31 +19,42 @@ function (::Type{SimpleSparseArray})(args...)
     SimpleSparseArray{Float64}(args...)
 end
 
-function (::Type{SimpleSparseArray{T}})(dims::Vararg{Integer,N}) where {T,N}
-    data = Dict{CartesianIndex{N},T}()
-    SimpleSparseArray{T,N}(data, dims)
+function (::Type{SimpleSparseArray{Tv}})(dims::Vararg{Integer,N}) where {Tv,N}
+    Ti = Int
+    data = Dict{Ti,Tv}()
+    SimpleSparseArray{Tv,Ti,N}(data, dims)
 end
 
-Base.IndexStyle(::Type{<:SimpleSparseArray}) = IndexCartesian()
+function (::Type{SimpleSparseArray{Tv,Ti}})(dims::Vararg{Integer,N}) where {Tv,Ti,N}
+    data = Dict{Ti,Tv}()
+    SimpleSparseArray{Tv,Ti,N}(data, dims)
+end
+
+function SparseArrays.nonzeroinds(arr::SimpleSparseArray)
+    eachstoredindex(arr)
+end
+function SparseArrays.nonzeros(arr::SimpleSparseArray)
+    values(arr.data)
+end
 
 Base.size(arr::SimpleSparseArray) = arr.size
-function Base.getindex(arr::SimpleSparseArray, I::CartesianIndex)
-    @boundscheck checkbounds(arr, I)
+function Base.getindex(arr::SimpleSparseArray, i::Integer)
+    @boundscheck checkbounds(arr, i)
     z = zero(eltype(arr))
-    get(arr.data,I, z)
+    get(arr.data,i, z)
 end
-function Base.getindex(arr::SimpleSparseArray, inds::Integer...)
-    ci = CartesianIndices(arr)[inds...]
-    arr[ci]
+function Base.getindex(arr::SimpleSparseArray, inds...)
+    i = LinearIndices(arr)[inds...]
+    arr[i]
 end
 
-function Base.setindex!(arr::SimpleSparseArray, val, I::CartesianIndex)
-    @boundscheck checkbounds(arr, I)
-    arr.data[I] = val
+function Base.setindex!(arr::SimpleSparseArray, val, i::Integer)
+    @boundscheck checkbounds(arr, i)
+    arr.data[i] = val
 end
 function Base.setindex!(arr::SimpleSparseArray, val, inds::Integer...)
-    ci = CartesianIndices(arr)[inds...]
-    arr[ci] = val
+    i = LinearIndices(arr)[inds...]
+    arr[i] = val
 end
 Base.iterate(arr::SimpleSparseArray)   = iterate(values(arr.data))
 Base.iterate(arr::SimpleSparseArray,s) = iterate(values(arr.data),s)
@@ -114,10 +127,10 @@ end
 
 function sparsify(arr; threshold=zero(eltype(arr)))
     out = SimpleSparseArray{eltype(arr)}(size(arr)...)
-    for ci in CartesianIndices(arr)
-        val = arr[ci]
+    for i in LinearIndices(arr)
+        val = arr[i]
         if abs(val) > threshold
-            out[ci] = val
+            out[i] = val
         end
     end
     out
